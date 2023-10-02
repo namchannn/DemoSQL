@@ -54,3 +54,67 @@ insert into Student_Subjects (student_id, subject_id)
 		(select id from Students where name like 'Nguyen Van An'),
 		(select id from Subjects where name like 'Database')
 	);
+
+select * from Students;
+-- select * from A left/inner/right join B on A.FK = B.PK;
+select Students.*, Classes.name as class_name, room from Students inner join Classes on Students.class_id = Classes.id;
+select Students.*, Classes.name as class_name, room from Students left join Classes on Students.class_id = Classes.id;
+select Students.*, Classes.name as class_name, room from Students right join Classes on Students.class_id = Classes.id;
+
+select A.*, B.name as class_name, room from Students A left join Classes B on A.class_id = B.id;
+select * from Student_Subject A left join Students B on A.student_id = B.id left join Subjects C on A.subject_id = C.id;
+
+select B.id, B.name as student_name, B.dob, D.name as class_name, C.name as subject_name from Student_Subjects A
+left join Students B on A.student.id = B.id
+left join Subjects C on A.subject_id = C.id
+left join Classes D on B.class_id = D.id;
+
+select B.name as student_name, count(C.name) as total from Student_Subjects A
+left join Students B on A.student_id = B.id
+left join Subjects C on A.subject_id = C.id
+left join Classes D on B.class_id = D.id
+group by B.name;
+
+select student_id, count(subject_id) as total from Student_Subjects group by student_id;
+
+---
+alter table Students add gender varchar(20); -- thêm cột
+alter table Students alter column gender varchar(15); -- sửa cột
+alter table Students drop column gender; -- xóa cột
+
+alter table Students as check(gender in ('Male', 'Famale'));
+
+alter table Students drop constraint CK_Students_gender_5AEE8289;
+
+alter table Students add constraint check_gender check(gender in ('Male', 'Famale'));
+alter table Students drop constraint check_gender;
+
+---
+create view student_info as
+select B.id, B.name as student_name, D.name as class_name, C.id as c_id, C.name as subject_name from Student_Subjects A
+left join Students B on A.student_id = B.id
+left join Subjects C on A.subject_id = C.id
+left join Classes D on B.class_id = D.id;
+-- drop view student_info;
+
+---
+insert into Students(name, dob, gender, class_id)
+	values('Dang Thi Thuy', '2000-06-12', 'Famale', 1002);
+
+--- Stored procedure
+create procedure add_student as insert into Students(name, dob, gender, class_id)
+	values('Dang Thi Thuy', '2000-06-12', 'Famale', 1002);
+-- drop procedure add_student;
+
+exec add_student;
+
+create procedure add_student @name varchar(255), @dob date, @gender varchar(20), @class int as insert into Students(name, dob, gender, class_id)
+	values(@name, @dob, @gender, @class);
+exec add_student @name = 'Le Trong Bach', @dob = '2001-09-11', @gender = 'Male', @class = 1;
+
+create procedure add_student add_student_advance @name varchar(255), @dob date, @gender varchar(20), @class varchar(150)
+as if exists (select * from Classes where name like @class) insert into Students(name, dob, gender, class_id)
+	values(@name, @dob, @gender, (select top 1 id from  Classes where name like @class));
+else
+	print 'Class is not exists';
+exec add_student @name = 'Le Trong Bach', @dob = '2001-09-11', @gender = 'Male', @class = 'T2305E';
